@@ -11,6 +11,8 @@ const dbPath = path.join(__dirname, 'twitterClone.db')
 
 let db = null
 
+app.use(cors());
+
 app.use(express.json())
 
 const initializeDBAndServer = async () => {
