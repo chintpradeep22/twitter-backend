@@ -1,13 +1,13 @@
 # 🐦 Twitter Clone Backend
 
-Twitter Clone Backend is a Node.js & Express-based backend for a simplified Twitter-like social media platform. It allows users to register, login, post tweets, follow other users, like and reply to tweets, and fetch feeds. The backend is fully secured using **JWT authentication** and supports **SQLite database** for storing users, tweets, followers, likes, and replies.
+Twitter Clone Backend is a Node.js & Express-based backend for a simplified Twitter-like social media platform. It allows users to register, login, post tweets, fetch following and follwers, like and reply to tweets, and fetch feeds. The backend is fully secured using **JWT authentication** and supports **SQLite database** for storing users, tweets, followers, likes, and replies.
 
 ---
 
 ## 🌐 Live Demo
 
 🔗 **Website / Static Frontend**: [Twitter Clone Frontend](https://twitterbackend.ccbp.tech/)  
-🔗 **Backend API Base URL**: [https://pradeeptdm9gnjscadijbi.drops.nxtwave.tech/](https://pradeeptdm9gnjscadijbi.drops.nxtwave.tech/)
+🔗 **Backend API Base URL**: [https://pradeeptdm9gnjscadijbi.drops.nxtwave.tech/](https://twitter-backend-38ej.onrender.com)
 
 ---
 
