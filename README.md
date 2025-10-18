@@ -7,7 +7,7 @@ Twitter Clone Backend is a Node.js & Express-based backend for a simplified Twit
 ## 🌐 Live Demo
 
 🔗 **Website / Static Frontend**: [Twitter Clone Frontend](https://twitterbackend.ccbp.tech/)  
-🔗 **Backend API Base URL**: [https://pradeeptdm9gnjscadijbi.drops.nxtwave.tech/](https://twitter-backend-38ej.onrender.com)
+🔗 **Backend API Base URL**: [https://twitter-backend-38ej.onrender.com](https://twitter-backend-38ej.onrender.com)
 
 ---
 
