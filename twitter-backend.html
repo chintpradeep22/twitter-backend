@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Twitter Clone Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f8fa;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1da1f2;
+        }
+
+        input,
+        button,
+        select {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #1da1f2;
+            color: #fff;
+            border: none;
+        }
+
+        button:hover {
+            background-color: #0d8ddb;
+        }
+
+        .section {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+
+        .tweet {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+        }
+
+        .loading {
+            font-style: italic;
+            color: gray;
+        }
+
+        .tweet-buttons button {
+            background-color: #eee;
+            color: #333;
+            margin-right: 5px;
+        }
+
+        .tweet-buttons button:hover {
+            background-color: #ddd;
+        }
+
+        pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Twitter Clone Frontend</h1>
+
+    <!-- Register Section -->
+    <div class="section" id="register-section">
+        <h2>Register</h2>
+        <input type="text" id="reg-username" placeholder="Username"><br>
+        <input type="password" id="reg-password" placeholder="Password"><br>
+        <input type="text" id="reg-name" placeholder="Name"><br>
+        <select id="reg-gender">
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+        </select><br>
+        <button onclick="registerUser()">Register</button>
+        <p id="register-msg"></p>
+    </div>
+
+    <!-- Login Section -->
+    <div class="section" id="login-section">
+        <h2>Login</h2>
+        <input type="text" id="login-username" placeholder="Username"><br>
+        <input type="password" id="login-password" placeholder="Password"><br>
+        <button onclick="loginUser()">Login</button>
+        <p id="login-msg"></p>
+    </div>
+
+    <!-- Feed Section -->
+    <div class="section" id="feed-section">
+        <h2>Feed</h2>
+        <button onclick="getFeed()">Load Feed</button>
+        <div id="feed"></div>
+    </div>
+
+    <!-- Following & Followers -->
+    <div class="section" id="following-section">
+        <h2>Following</h2>
+        <button onclick="getFollowing()">Load Following</button>
+        <div id="following"></div>
+    </div>
+
+    <div class="section" id="followers-section">
+        <h2>Followers</h2>
+        <button onclick="getFollowers()">Load Followers</button>
+        <div id="followers"></div>
+    </div>
+
+    <!-- My Tweets -->
+    <div class="section" id="tweet-section">
+        <h2>Create Tweet</h2>
+        <input type="text" id="tweet-text" placeholder="Your tweet"><br>
+        <button onclick="createTweet()">Post Tweet</button>
+        <h3>My Tweets</h3>
+        <div id="tweets"></div>
+    </div>
+
+    <!-- Tweet Details -->
+    <div class="section" id="tweet-details-section">
+        <h2>Tweet Details</h2>
+        <input type="number" id="tweet-id" placeholder="Tweet ID"><br>
+        <button onclick="getTweetDetails()">View Tweet</button>
+        <button onclick="getTweetLikes()">View Likes</button>
+        <button onclick="getTweetReplies()">View Replies</button>
+        <button onclick="deleteTweet()">Delete Tweet</button>
+        <pre id="tweet-details"></pre>
+    </div>
+
+    <script>
+        const BASE_URL = "https://twitter-backend-38ej.onrender.com";
+        let jwtToken = localStorage.getItem("jwtToken") || "";
+
+        if (jwtToken) {
+            loadMyTweets();
+        }
+
+        async function registerUser() {
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const gender = document.getElementById('reg-gender').value;
+
+            if (!username || !password || !name || !gender) {
+                alert("All fields are required.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${BASE_URL}/register/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password, name, gender })
+                });
+                const msg = await res.text();
+                document.getElementById('register-msg').innerText = msg;
+                if (res.ok) {
+                    document.getElementById('reg-username').value = "";
+                    document.getElementById('reg-password').value = "";
+                    document.getElementById('reg-name').value = "";
+                    document.getElementById('reg-gender').value = "";
+                }
+            } catch (error) {
+                alert("Error registering user: " + error.message);
+            }
+        }
+
+        async function loginUser() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!username || !password) {
+                alert("Username and password are required.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${BASE_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (data.jwtToken) {
+                    jwtToken = data.jwtToken;
+                    localStorage.setItem("jwtToken", jwtToken);
+                    document.getElementById('login-msg').innerText = "Login successful!";
+                    document.getElementById('login-username').value = "";
+                    document.getElementById('login-password').value = "";
+                    loadMyTweets();
+                } else {
+                    document.getElementById('login-msg').innerText = "Login failed: " + (data.error || "Unknown error");
+                }
+            } catch (error) {
+                alert("Error logging in: " + error.message);
+            }
+        }
+
+        async function getFeed() {
+            const feedDiv = document.getElementById('feed');
+            feedDiv.innerHTML = `<span class="loading">Loading feed...</span>`;
+            try {
+                const res = await fetch(`${BASE_URL}/user/tweets/feed/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const feed = await res.json();
+                feedDiv.innerHTML = feed.map(f => `
+                    <div class="tweet">
+                        <b>${f.username}</b>: ${f.tweet} <br>
+                        <i>${new Date(f.dateTime).toLocaleString()}</i>
+                    </div>
+                `).join('');
+            } catch (error) {
+                feedDiv.innerHTML = "Failed to load feed: " + error.message;
+            }
+        }
+
+        async function getFollowing() {
+            const div = document.getElementById('following');
+            div.innerHTML = `<span class="loading">Loading...</span>`;
+            try {
+                const res = await fetch(`${BASE_URL}/user/following/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                div.innerHTML = data.length ? data.map(f => f.name).join('<br>') : "No following yet.";
+            } catch (error) {
+                div.innerHTML = "Failed: " + error.message;
+            }
+        }
+
+        async function getFollowers() {
+            const div = document.getElementById('followers');
+            div.innerHTML = `<span class="loading">Loading...</span>`;
+            try {
+                const res = await fetch(`${BASE_URL}/user/followers/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                div.innerHTML = data.length ? data.map(f => f.name).join('<br>') : "No followers yet.";
+            } catch (error) {
+                div.innerHTML = "Failed: " + error.message;
+            }
+        }
+
+        async function createTweet() {
+            const tweet = document.getElementById('tweet-text').value.trim();
+            if (!tweet) {
+                alert("Tweet cannot be empty.");
+                return;
+            }
+            try {
+                const res = await fetch(`${BASE_URL}/user/tweets/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jwtToken}` },
+                    body: JSON.stringify({ tweet })
+                });
+                alert(await res.text());
+                document.getElementById('tweet-text').value = "";
+                loadMyTweets();
+            } catch (error) {
+                alert("Error posting tweet: " + error.message);
+            }
+        }
+
+        async function loadMyTweets() {
+            const div = document.getElementById('tweets');
+            div.innerHTML = `<span class="loading">Loading your tweets...</span>`;
+            try {
+                const res = await fetch(`${BASE_URL}/user/tweets/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const tweets = await res.json();
+                div.innerHTML = tweets.length ? tweets.map(t => `
+                    <div class="tweet">
+                        ID: <b>${t.tweet_id}</b><br>
+                        ${t.tweet} <br>
+                        Likes: ${t.likes}, Replies: ${t.replies} <br>
+                        <i>${new Date(t.dateTime).toLocaleString()}</i>
+                        <div class="tweet-buttons">
+                            <button onclick="getTweetLikesById(${t.tweet_id})">Likes</button>
+                            <button onclick="getTweetRepliesById(${t.tweet_id})">Replies</button>
+                        </div>
+                    </div>
+                `).join('') : "You have no tweets yet.";
+            } catch (error) {
+                div.innerHTML = "Failed to load tweets: " + error.message;
+            }
+        }
+
+        async function getTweetDetails() {
+            const tweetId = document.getElementById('tweet-id').value.trim();
+            if (!tweetId) return alert("Enter Tweet ID");
+            const div = document.getElementById('tweet-details');
+            div.textContent = "Loading...";
+            try {
+                const res = await fetch(`${BASE_URL}/tweets/${tweetId}/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                div.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                div.textContent = "Failed: " + error.message;
+            }
+        }
+
+        async function getTweetLikes() {
+            const tweetId = document.getElementById('tweet-id').value.trim();
+            if (!tweetId) return alert("Enter Tweet ID");
+            getTweetLikesById(tweetId);
+        }
+
+        async function getTweetLikesById(tweetId) {
+            const div = document.getElementById('tweet-details');
+            div.textContent = "Loading likes...";
+            try {
+                const res = await fetch(`${BASE_URL}/tweets/${tweetId}/likes/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                div.textContent = data.likes.length ? `Likes: ${data.likes.join(', ')}` : "No likes yet.";
+            } catch (error) {
+                div.textContent = "Failed: " + error.message;
+            }
+        }
+
+        async function getTweetReplies() {
+            const tweetId = document.getElementById('tweet-id').value.trim();
+            if (!tweetId) return alert("Enter Tweet ID");
+            getTweetRepliesById(tweetId);
+        }
+
+        async function getTweetRepliesById(tweetId) {
+            const div = document.getElementById('tweet-details');
+            div.textContent = "Loading replies...";
+            try {
+                const res = await fetch(`${BASE_URL}/tweets/${tweetId}/replies/`, {
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                div.textContent = data.replies.length ? data.replies.map(r => `${r.name}: ${r.reply}`).join('\n') : "No replies yet.";
+            } catch (error) {
+                div.textContent = "Failed: " + error.message;
+            }
+        }
+
+        async function deleteTweet() {
+            const tweetId = document.getElementById('tweet-id').value.trim();
+            if (!tweetId) return alert("Enter Tweet ID");
+            try {
+                const res = await fetch(`${BASE_URL}/tweets/${tweetId}/`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${jwtToken}` }
+                });
+                alert(await res.text());
+                loadMyTweets();
+            } catch (error) {
+                alert("Failed to delete tweet: " + error.message);
+            }
+        }
+    </script>
+
+</body>
+
+</html>
